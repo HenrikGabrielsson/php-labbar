@@ -57,8 +57,18 @@
 		}
 
 		// Körs när användaren har gjort en lyckad inloggning.
-		public function loginSuccess() {
-			$this->message = "<p>Inloggning lyckades</p>";
+		public function loginSuccess($loginType) {
+			if($loginType == "SavedCredentialsLoginSuccess") {
+				$this->message = "<p>Inloggning lyckades och vi kommer ihåg dig nästa gång</p>";
+			}
+			
+			if($loginType == "LoginSuccess") {
+				$this->message = "<p>Inloggning lyckades</p>";
+			}
+			
+			if($loginType == "CookieLoginSuccess") {
+				$this->message = "<p>Inloggning lyckades via cookies</p>";
+			}
 		}
 
 		// Körs om något blev fel i inloggningen. Fel-definitionerna görs i loginModel.php.
@@ -73,6 +83,14 @@
 			
 			if($errorType == "InvalidCredentials") {
 				$this->message = "<p>Felaktigt användarnamn och/eller lösenord</p>";
+			}
+			
+			if($errorType == "BadCookieCredentials") {
+				$this->message = "<p>Felaktigt information i cookie</p>";
+			}
+			
+			if($errorType == "Unexpected") {
+				$this->message = "<p>Ett oväntat fel har inträffat. Förlåt.</p>";
 			}
 		}
 

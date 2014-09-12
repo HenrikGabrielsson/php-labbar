@@ -32,9 +32,8 @@
 			// loginModel->login() kastar undantag om autentiseringen misslyckas, därav try - catch.
 			try {
 				// Om autentisering lyckas så säger vi till vyn att visa ett glatt meddelande!
-				if($this->model->login($this->view->suppliedUsername(), $this->view->suppliedPassword(), $this->view->persistentLogin())) {
-					$this->view->loginSuccess();
-				}
+				$loginResult = $this->model->login($this->view->suppliedUsername(), $this->view->suppliedPassword(), $this->view->persistentLogin());
+				$this->view->loginSuccess($loginResult);
 			}
 			// Om något går fel i autentiseringen så kastas ett undantag. Detta presenteras sedan i view.
 			catch(Exception $e) {
