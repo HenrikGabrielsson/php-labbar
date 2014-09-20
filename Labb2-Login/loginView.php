@@ -5,6 +5,8 @@
 		private $passwordLocation = "password";					// Nyckel, används i formuläret samt $_POST-arrayet.
 		private $persistentLoginLocation = "persistentLogin";	// Nyckel, används i formuläret samt $_POST-arrayet.
 		private $message = "";									// Felmeddelande/Bekräftelse till användaren.
+		private $cookieUsername = "Username";	// Nyckel. Används i $_COOKIE för att lagra ett sparat användarnamn.
+		private $cookiePassword = "Password";	// Nyckel. Används i $_COOKIE för att lagra ett sparat lösenord.
 		
 		public function __construct(loginModel $model) {
 			$this->model = $model;
@@ -58,7 +60,9 @@
 
 		// Körs när användaren har gjort en lyckad inloggning.
 		public function loginSuccess($loginType) {
-			if($loginType == "SavedCredentialsLoginSuccess") {
+			if($loginType == "SaveCredentialsLoginSuccess") {
+				setcookie($this->cookieUsername, $_POST[$this->usernameLocation], time() + 30);
+				setcookie($this->cookiePassword, $_POST[$this->passwordLocation], time() + 30);
 				$this->message = "<p>Inloggning lyckades och vi kommer ihåg dig nästa gång</p>";
 			}
 			
@@ -72,7 +76,7 @@
 		}
 
 		// Körs om något blev fel i inloggningen. Fel-definitionerna görs i loginModel.php.
-		public function showLoginError($errorType) {
+		public function loginError($errorType) {
 			if($errorType == "EmptyUsername") {
 				$this->message = "<p>Användarnamn saknas</p>";
 			}
@@ -86,6 +90,7 @@
 			}
 			
 			if($errorType == "BadCookieCredentials") {
+				$this->destroyAllCookies();
 				$this->message = "<p>Felaktigt information i cookie</p>";
 			}
 			
@@ -113,7 +118,7 @@
 			}
 		}
 		
-		public function persistentLogin() {
+		public function saveCredentials() {
 			if(isset($_POST[$this->persistentLoginLocation]) && $_POST[$this->persistentLoginLocation] == TRUE) {
 				return TRUE;
 			}
@@ -127,7 +132,35 @@
 		
 		// Körs om utloggning har lyckats.
 		public function doLogout() {
+			$this->destroyAllCookies();
+			session_destroy();	// Förstör användarens lokala sessions-cookie.
 			$this->message = "<p>Du har nu loggat ut</p>";
+		}
+		
+		// Returnerar ett sparat användarnamn.
+		public function savedUsername() {
+			if(isset($_COOKIE[$this->cookieUsername])) {
+				return $_COOKIE[$this->cookieUsername];
+			}
+		}
+		
+		// Returnerar ett sparat lösenord.
+		public function savedPassword() {
+			if(isset($_COOKIE[$this->cookiePassword])) {
+				return $_COOKIE[$this->cookiePassword];
+			}
+		}
+		
+		// Returnerar true om det finns sparade cookies med användarnamn och lösenord.
+		public function loginWithSavedCredentials() {
+			return (isset($_COOKIE[$this->cookieUsername]) && isset($_COOKIE[$this->cookiePassword]));
+		}
+		
+		// Tar bort alla lagrade cookies.
+		public function destroyAllCookies() {
+			foreach ($_COOKIE as $c_key => $c_value) {
+    			setcookie($c_key, NULL, 1);
+			}
 		}
 	}
 ?>

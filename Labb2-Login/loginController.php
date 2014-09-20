@@ -10,7 +10,7 @@
 			$this->view = new loginView($this->model);
 			
 			// Om användaren försöker logga in och inte redan är inloggad så kör vi doLogin().
-			if(($this->model->persistentLogin() || $this->view->loginAttempted()) && !$this->model->userIsLoggedIn()) {
+			if(($this->view->loginWithSavedCredentials() || $this->view->loginAttempted()) && !$this->model->userIsLoggedIn()) {
 				$this->doLogin();
 			}
 			
@@ -29,15 +29,24 @@
 		}
 		
 		public function doLogin() {
+			// $username och $password sätts per default till det som användaren har angett. Om det finns sparade kakor så används uppgifterna i dem istället.
+			$username = $this->view->suppliedUsername();
+			$password = $this->view->suppliedPassword();
+			
+			if($this->view->loginWithSavedCredentials()) {
+				$username = $this->view->savedUsername();
+				$password = $this->view->savedPassword();
+			}
+			
 			// loginModel->login() kastar undantag om autentiseringen misslyckas, därav try - catch.
 			try {
 				// Om autentisering lyckas så säger vi till vyn att visa ett glatt meddelande!
-				$loginResult = $this->model->login($this->view->suppliedUsername(), $this->view->suppliedPassword(), $this->view->persistentLogin());
+				$loginResult = $this->model->login($username, $password, $this->view->saveCredentials(), $this->view->loginWithSavedCredentials());
 				$this->view->loginSuccess($loginResult);
 			}
 			// Om något går fel i autentiseringen så kastas ett undantag. Detta presenteras sedan i view.
 			catch(Exception $e) {
-				$this->view->showLoginError($e->getMessage());
+				$this->view->loginError($e->getMessage());
 			}
 		}
 	
