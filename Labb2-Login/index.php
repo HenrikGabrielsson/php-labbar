@@ -1,6 +1,5 @@
 <?php
 	session_start();
-	require_once("loginController.php");
-	$lc = new loginController();
-	//$lc->doStuff();
+	require_once("LoginController.php");
+	$lc = new LoginController();
 ?>

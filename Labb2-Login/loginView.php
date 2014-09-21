@@ -8,13 +8,12 @@
 		private $cookieUsername = "Username";					// Nyckel. Används i $_COOKIE för att lagra ett sparat användarnamn.
 		private $cookiePassword = "Password";					// Nyckel. Används i $_COOKIE för att lagra ett sparat lösenord.
 		
-		public function __construct(loginModel $model) {
+		public function __construct(LoginModel $model) {
 			$this->model = $model;
 		}
 		
 		public function showHTML() {
-			// Flytta till model
-			setlocale(LC_ALL, "swedish");						// Sätter att vi vill använda svenska namn på veckodagar och sån skit.
+			setlocale(LC_ALL, "sv_SE");							// Sätter att vi vill använda svenska namn på veckodagar och sån skit.
 			$weekDay = ucfirst(utf8_encode(strftime("%A")));	// Veckodag. ucfirst() sätter stor bokstav i början av veckodagen, ex: måndag blir Måndag. utf8_encode() gör att åäö funkar.
 			$date = strftime("%#d");							// Datum. kommer sannolikt behöva ändras i en linux-miljö.
 			$month = ucfirst(strftime("%B"));					// Månad. behöver inte utf8_encode eftersom inga svenska månadsnamn innehåller åäö.
@@ -61,8 +60,10 @@
 
 		// Körs när användaren har gjort en lyckad inloggning.
 		public function loginSuccess($loginType) {
+			// Om användaren vill hållas inloggad så sparas dennes användarnamn och ett temporärt lösenord ner i cookies.
+			// Uppgifterna lagras även på servern tillsammans med cookiens livstid för att kontrollera att ingen har fifflat med cookien. 
 			if($loginType == "SaveCredentialsLoginSuccess") {
-				$time = time() + (60*60*24*30);
+				$time = time() + (60*60*24*30);	// Ändra här för att sätta livstid på cookien. 60*60*24*30 = 30 dygn
 				$temporaryPassword = md5($time . $_POST[$this->passwordLocation]);
 				setcookie($this->cookieUsername, $_POST[$this->usernameLocation], $time);
 				setcookie($this->cookiePassword, $temporaryPassword, $time);
@@ -118,10 +119,11 @@
 		// Returnerar lösenordet som användaren angav.
 		public function suppliedPassword() {
 			if(isset($_POST[$this->passwordLocation])) {
-				return md5($_POST[$this->passwordLocation]); // Returnerar det hashade lösenordet.
+				return $_POST[$this->passwordLocation];
 			}
 		}
 		
+		// Returnerar true om användaren vill hållas inloggad.
 		public function saveCredentials() {
 			if(isset($_POST[$this->persistentLoginLocation]) && $_POST[$this->persistentLoginLocation] == TRUE) {
 				return TRUE;

@@ -5,9 +5,9 @@
 		private $useragentLocation = "useragent";			// Nyckel. Används i $_SESSION för att lagra en inloggad användares useragent.
 		private $clientAddressLocation = "clientAddress";	// Nyckel. Används i $_SESSION för att lagra en inloggad användares ip-adress.
 		
-		private $usersFilePath = "Users.txt";
-		private $savedCredentialsFilePath = "SavedCredentials.txt";
-		private $helpers;
+		private $usersFilePath = "Users.txt";						// I denna fil finns alla användare och deras (krypterade) lösenord sparade.
+		private $savedCredentialsFilePath = "SavedCredentials.txt";	// I denna fil lagras användare och temporära lösenord när användaren vill fortsätta vara inloggad.
+		private $helpers;	// Hjälp-funktioner.
 		
 		public function __construct() {
 			$this->helpers = new Helpers();
@@ -15,15 +15,6 @@
 		
 		// Om inloggningen lyckas så returneras ett lyckat state, annars kastas ett undantag.
 		public function login($username, $password, $saveCredentials = FALSE, $loginWithSavedCredentials = FALSE) {
-			
-			// Validering, om något går fel så kastar vi ett undantag som fångas i controllern och presenteras i view.
-			if(!isset($username) || $username == "") {
-				throw new Exception("EmptyUsername");
-			}
-			
-			if(!isset($password) || $password == "") {
-				throw new Exception("EmptyPassword");
-			}
 			
 			// Om det finns sparade kakor med korrekt inloggningsuppgifter så används dem i första hand. 
 			if($loginWithSavedCredentials) {
@@ -37,6 +28,17 @@
 				}
 				throw new Exception("BadCookieCredentials");
 			}
+			
+			// Validering, om något går fel så kastar vi ett undantag som fångas i controllern och presenteras i view.
+			if(!isset($username) || $username == "") {
+				throw new Exception("EmptyUsername");
+			}
+			
+			if(!isset($password) || $password == "") {
+				throw new Exception("EmptyPassword");
+			}
+			
+			$password = md5($password);
 			
 			// Om inloggningsuppgifterna stämmer så är användaren autentiserad. Sessions-arrayet lagrar användarnamnet.
 			if($this->Authenticate($username, $password, $this->usersFilePath)){
@@ -73,6 +75,7 @@
 			session_unset();	// Tömmer sessions-arrayet.
 		}
 		
+		// Autentiseringsfunktion. $source är den fil där valida inloggningsuppgifter ligger lagrade.
 		private function Authenticate($username, $password, $source) {
 			$users = file($source);
 			foreach($users as $user) {
