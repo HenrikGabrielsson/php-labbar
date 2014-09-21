@@ -1,13 +1,13 @@
 <?php
-	require_once("loginModel.php");
-	require_once("loginView.php");
-	class loginController {
+	require_once("LoginModel.php");
+	require_once("LoginView.php");
+	class LoginController {
 		private $model;
 		private $view;
 		
 		public function __construct() {
-			$this->model = new loginModel();
-			$this->view = new loginView($this->model);
+			$this->model = new LoginModel();
+			$this->view = new LoginView($this->model);
 			
 			// Om användaren försöker logga in och inte redan är inloggad så kör vi doLogin().
 			if(($this->view->loginWithSavedCredentials() || $this->view->loginAttempted()) && !$this->model->userIsLoggedIn()) {
@@ -38,7 +38,7 @@
 				$password = $this->view->savedPassword();
 			}
 			
-			// loginModel->login() kastar undantag om autentiseringen misslyckas, därav try - catch.
+			// LoginModel->login() kastar undantag om autentiseringen misslyckas, därav try - catch.
 			try {
 				// Om autentisering lyckas så säger vi till vyn att visa ett glatt meddelande!
 				$loginResult = $this->model->login($username, $password, $this->view->saveCredentials(), $this->view->loginWithSavedCredentials());

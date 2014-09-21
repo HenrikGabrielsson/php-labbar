@@ -1,18 +1,19 @@
 <?php
-	class loginView {
+	class LoginView {
 		private $model;											// Innehåller en referens till loginModel-objektet som skapas i loginController.
 		private $usernameLocation = "username";					// Nyckel, används i formuläret samt $_POST-arrayet.
 		private $passwordLocation = "password";					// Nyckel, används i formuläret samt $_POST-arrayet.
 		private $persistentLoginLocation = "persistentLogin";	// Nyckel, används i formuläret samt $_POST-arrayet.
 		private $message = "";									// Felmeddelande/Bekräftelse till användaren.
-		private $cookieUsername = "Username";	// Nyckel. Används i $_COOKIE för att lagra ett sparat användarnamn.
-		private $cookiePassword = "Password";	// Nyckel. Används i $_COOKIE för att lagra ett sparat lösenord.
+		private $cookieUsername = "Username";					// Nyckel. Används i $_COOKIE för att lagra ett sparat användarnamn.
+		private $cookiePassword = "Password";					// Nyckel. Används i $_COOKIE för att lagra ett sparat lösenord.
 		
 		public function __construct(loginModel $model) {
 			$this->model = $model;
 		}
 		
 		public function showHTML() {
+			// Flytta till model
 			setlocale(LC_ALL, "swedish");						// Sätter att vi vill använda svenska namn på veckodagar och sån skit.
 			$weekDay = ucfirst(utf8_encode(strftime("%A")));	// Veckodag. ucfirst() sätter stor bokstav i början av veckodagen, ex: måndag blir Måndag. utf8_encode() gör att åäö funkar.
 			$date = strftime("%#d");							// Datum. kommer sannolikt behöva ändras i en linux-miljö.
@@ -61,8 +62,11 @@
 		// Körs när användaren har gjort en lyckad inloggning.
 		public function loginSuccess($loginType) {
 			if($loginType == "SaveCredentialsLoginSuccess") {
-				setcookie($this->cookieUsername, $_POST[$this->usernameLocation], time() + 30);
-				setcookie($this->cookiePassword, $_POST[$this->passwordLocation], time() + 30);
+				$time = time() + (60*60*24*30);
+				$temporaryPassword = md5($time . $_POST[$this->passwordLocation]);
+				setcookie($this->cookieUsername, $_POST[$this->usernameLocation], $time);
+				setcookie($this->cookiePassword, $temporaryPassword, $time);
+				$this->model->saveCredentialsOnServer($_POST[$this->usernameLocation], $temporaryPassword, $time);
 				$this->message = "<p>Inloggning lyckades och vi kommer ihåg dig nästa gång</p>";
 			}
 			
@@ -114,7 +118,7 @@
 		// Returnerar lösenordet som användaren angav.
 		public function suppliedPassword() {
 			if(isset($_POST[$this->passwordLocation])) {
-				return $_POST[$this->passwordLocation];
+				return md5($_POST[$this->passwordLocation]); // Returnerar det hashade lösenordet.
 			}
 		}
 		
